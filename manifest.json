@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Dynamic Query Modifier",
+  "version": "2.0",
+  "permissions": [
+    "declarativeNetRequest",
+    "storage"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Configure Parameters"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "dynamic_rules",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  }
+}
