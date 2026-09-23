@@ -1,55 +1,32 @@
 // popup.js
 document.addEventListener('DOMContentLoaded', async () => {
-  const result = await chrome.storage.local.get('incrementMultiplier');
-  document.getElementById('multiplier').value = result.incrementMultiplier || '';
-  document.getElementById('btn-save').addEventListener('click', saveRules);
-});
+  const presetSelect = document.getElementById('preset');
+  const statusDiv = document.getElementById('status');
 
-async function saveRules() {
-  const multInput = document.getElementById('multiplier');
-  const multiplier = parseInt(multInput.value, 10);
-  const status = document.getElementById('status');
-
-  if (!multiplier || multiplier < 1) {
-    status.textContent = '❌ Enter a valid number ≥ 1';
-    status.style.color = 'red';
-    return;
+  // 1. Load the previously saved preset when popup opens
+  const result = await chrome.storage.local.get('presetValue');
+  if (result.presetValue) {
+    presetSelect.value = result.presetValue;
   }
 
-  await chrome.storage.local.set({ incrementMultiplier: multiplier });
+  // 2. Save instantly when the user changes the dropdown selection
+  presetSelect.addEventListener('change', async (event) => {
+    const selectedValue = event.target.value;
 
-  // ✅ FIXED: Uses capture groups to PRESERVE the URL path and other params
-  // Group 1 (\1): Everything from start up to and including "increment="
-  // Group 2 (\2): The old numeric value (discarded in substitution)
-  const rule = {
-    id: 1,
-    priority: 1,
-    action: {
-      type: "redirect",
-      redirect: {
-        // \1 preserves the full URL path + all params before increment
-        // Then we append our new clean increment value
-        regexSubstitution: "\\1" + multiplier
-      }
-    },
-    condition: {
-      // Capture group 1 = everything up to &increment= or ?increment=
-      // Capture group 2 = the digits after increment=
-      regexFilter: "(.*[?&]increment=)(\\d+)",
-      resourceTypes: ["xmlhttprequest"],
-      requestDomains: ["backend-production.perusall.com"]
+    try {
+      // Save to storage
+      await chrome.storage.local.set({ presetValue: selectedValue });
+      
+      statusDiv.textContent = `✅ Saved! Preset set to ${selectedValue}`;
+      statusDiv.style.color = 'green';
+
+      // Clear status message after 1.5 seconds
+      setTimeout(() => {
+        statusDiv.textContent = '';
+      }, 1500);
+    } catch (err) {
+      statusDiv.textContent = '❌ ' + err.message;
+      statusDiv.style.color = 'red';
     }
-  };
-
-  try {
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: [1],
-      addRules: [rule]
-    });
-    status.textContent = `✅ Active! Setting increment to ${multiplier} on Perusall`;
-    status.style.color = 'green';
-  } catch (err) {
-    status.textContent = '❌ ' + err.message;
-    status.style.color = 'red';
-  }
-}
+  });
+});
