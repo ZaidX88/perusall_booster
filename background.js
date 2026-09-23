@@ -1,51 +1,38 @@
-// background.js
-
-// Function to update the DNR rule based on the value
-async function updatePerusallRule(presetValue) {
-  if (!presetValue) return;
-
-  // If 'random' is chosen, you can handle it or use a default/fallback number
-  const multiplier = presetValue === 'random' ? 5 : parseInt(presetValue, 10);
-
-  const rule = {
-    id: 1,
-    priority: 1,
-    action: {
-      type: "redirect",
-      redirect: {
-        // \1 preserves the full URL path + all params before increment
-        regexSubstitution: "\\1" + multiplier
+chrome.webRequest.onBeforeSendHeaders.addListener(
+  (details) => {
+    if (details.url.includes("active_time") || details.url.includes("active-time")) {
+      const headersMap = {};
+      
+      if (details.requestHeaders) {
+        for (const header of details.requestHeaders) {
+          const lowerName = header.name.toLowerCase();
+          // Store them with their exact intended casing
+          if (lowerName === 'x-csrf-token') {
+            headersMap['X-Csrf-Token'] = header.value;
+          }
+          if (lowerName === 'x-perusall-client-user-id') {
+            headersMap['X-Perusall-Client-User-Id'] = header.value;
+          }
+        }
       }
-    },
-    condition: {
-      regexFilter: "(.*[?&]increment=)(\\d+)",
-      resourceTypes: ["xmlhttprequest"],
-      requestDomains: ["backend-production.perusall.com"]
+
+      console.log("Captured URL & Normalized Headers:", details.url, headersMap);
+
+      chrome.storage.local.set({
+        perusallUrl: details.url,
+        perusallHeaders: headersMap
+      }, () => {
+        console.log("Saved URL & Headers to storage:", details.url, headersMap);
+      });
+
+      if (details.tabId !== -1) {
+        chrome.tabs.sendMessage(details.tabId, {
+          type: "TRIGGER_HEARTBEAT_WITH_HEADERS",
+          url: details.url,
+        }).catch(() => {});
+      }
     }
-  };
-
-  try {
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: [1],
-      addRules: [rule]
-    });
-    console.log(`DNR Rule updated: increment set to ${multiplier}`);
-  } catch (err) {
-    console.error("Failed to update DNR rule:", err);
-  }
-}
-
-// 1. Run when extension starts/installs
-chrome.runtime.onInstalled.addListener(async () => {
-  const result = await chrome.storage.local.get('presetValue');
-  if (result.presetValue) {
-    updatePerusallRule(result.presetValue);
-  }
-});
-
-// 2. Listen for changes when user changes the dropdown in popup.js
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'local' && changes.presetValue) {
-    updatePerusallRule(changes.presetValue.newValue);
-  }
-});
+  },
+  { urls: ["https://*.perusall.com/*"] },
+  ["requestHeaders"]
+);

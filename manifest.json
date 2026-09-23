@@ -7,7 +7,7 @@
     "storage",
     "webRequest"
   ],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": ["https://*.perusall.com/*"],
   "background": {
     "service_worker": "background.js"
   },
@@ -15,6 +15,12 @@
     "default_popup": "popup.html",
     "default_title": "Configure Parameters"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://*.perusall.com/*"],
+      "js": ["content.js"]
+    }
+  ],
   "declarative_net_request": {
     "rule_resources": [
       {
