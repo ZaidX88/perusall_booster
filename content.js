@@ -18,6 +18,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     });
     
+  }else if (message.type === "FETCH_PROGRESS") {
+    fetchProgressMetrics();
   }
 });
 
@@ -64,7 +66,7 @@ async function fireFetch() {
 
     const requestHeaders = {
   ...(data.perusallHeaders || {})
-};
+    };
 
     console.log("Dispatching fetch with storage headers:", requestHeaders);
 
@@ -81,6 +83,41 @@ async function fireFetch() {
       console.log(`⚡ [Booster] Heartbeat sent! Status: ${response.status} at ${new Date().toLocaleTimeString()}`);
     } catch (err) {
       console.error("❌ [Booster] Fetch error:", err);
+    }
+  });
+}
+
+// Fetch Reading Time, Reading Percentage, and Annotations
+async function fetchProgressMetrics() {
+  chrome.storage.local.get(['courseId', 'assignmentId', 'perusallHeaders'], async (data) => {
+    if (!data.courseId || !data.assignmentId) {
+      console.log("[Booster] Missing courseId or assignmentId for progress fetch.");
+      return;
+    }
+
+    const progressUrl = `https://backend-production.perusall.com/courses/${data.courseId}/assignments/${data.assignmentId}/progress?partNum=1`;
+    const requestHeaders = {
+      ...(data.perusallHeaders || {})
+    };
+
+    try {
+      const response = await fetch(progressUrl, {
+        method: "GET",
+        headers: requestHeaders,
+        credentials: "include"
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const json = await response.json();
+      if (json && json.metrics) {
+        await chrome.storage.local.set({ progressMetrics: json.metrics });
+        console.log("[Booster] Progress metrics updated:", json.metrics);
+      }
+    } catch (err) {
+      console.error("[Booster] Progress metrics fetch error:", err);
     }
   });
 }

@@ -6,24 +6,33 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
       return;
     }
 
-    // Intercept assignment document URLs to extract assignmentName and assignmentId
+    // Intercept assignment document URLs to extract courseId, assignmentName, and assignmentId
     if (details.url.includes("/documents/") && details.url.includes("assignmentId=")) {
       try {
         const parsedUrl = new URL(details.url);
         const pathParts = parsedUrl.pathname.split('/');
+        const coursesIndex = pathParts.indexOf('courses');
         const docIndex = pathParts.indexOf('documents');
 
-        if (docIndex !== -1 && docIndex + 1 < pathParts.length) {
-          const assignmentName = pathParts[docIndex + 1];
-          const assignmentId = parsedUrl.searchParams.get('assignmentId');
+        let courseId = null;
+        if (coursesIndex !== -1 && coursesIndex + 1 < pathParts.length) {
+          courseId = pathParts[coursesIndex + 1];
+        }
 
-          if (assignmentName && assignmentId) {
-            chrome.storage.local.set({
-              assignmentName: assignmentName,
-              assignmentId: assignmentId
-            });
-            console.log("Captured assignment details:", assignmentName, assignmentId);
-          }
+        let assignmentName = null;
+        if (docIndex !== -1 && docIndex + 1 < pathParts.length) {
+          assignmentName = pathParts[docIndex + 1];
+        }
+
+        const assignmentId = parsedUrl.searchParams.get('assignmentId');
+
+        if (assignmentName && assignmentId) {
+          chrome.storage.local.set({
+            courseId: courseId,
+            assignmentName: assignmentName,
+            assignmentId: assignmentId
+          });
+          console.log("Captured assignment details:", { courseId, assignmentName, assignmentId });
         }
       } catch (err) {
         console.error("Error parsing assignment URL:", err);
