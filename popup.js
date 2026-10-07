@@ -1,32 +1,28 @@
-// popup.js
 document.addEventListener('DOMContentLoaded', async () => {
-  const presetSelect = document.getElementById('preset');
+  const enableToggle = document.getElementById('enableToggle');
   const statusDiv = document.getElementById('status');
 
-  // 1. Load the previously saved preset when popup opens
-  const result = await chrome.storage.local.get('presetValue');
-  if (result.presetValue) {
-    presetSelect.value = result.presetValue;
-  }
+  // Load saved state (defaults to true if unset)
+  const result = await chrome.storage.local.get('heartbeatEnabled');
+  const isEnabled = result.heartbeatEnabled !== false;
+  enableToggle.checked = isEnabled;
 
-  // 2. Save instantly when the user changes the dropdown selection
-  presetSelect.addEventListener('change', async (event) => {
-    const selectedValue = event.target.value;
+  // Update storage when toggle state changes
+  enableToggle.addEventListener('change', async (event) => {
+    const enabled = event.target.checked;
 
     try {
-      // Save to storage
-      await chrome.storage.local.set({ presetValue: selectedValue });
-      
-      statusDiv.textContent = `✅ Saved! Preset set to ${selectedValue}`;
-      statusDiv.style.color = 'green';
+      await chrome.storage.local.set({ heartbeatEnabled: enabled });
 
-      // Clear status message after 1.5 seconds
+      statusDiv.textContent = enabled ? 'Saved: Booster enabled.' : 'Saved: Booster disabled.';
+      statusDiv.style.color = enabled ? '#16a34a' : '#4b5563';
+
       setTimeout(() => {
         statusDiv.textContent = '';
       }, 1500);
     } catch (err) {
-      statusDiv.textContent = '❌ ' + err.message;
-      statusDiv.style.color = 'red';
+      statusDiv.textContent = 'Error saving state: ' + err.message;
+      statusDiv.style.color = '#dc2626';
     }
   });
 });

@@ -9,8 +9,14 @@ console.log("Perusall booster content script active.");
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "TRIGGER_HEARTBEAT_WITH_HEADERS") {
     
-    console.log("Received new trigger, starting a bounded batch of 4 heartbeats.");
-    startBoundedBatch(activeJob);
+    chrome.storage.local.get(['heartbeatEnabled'], (data) => {
+      if (data.heartbeatEnabled !== false) {
+        console.log("Received new trigger, starting a bounded batch of 4 heartbeats.");
+        startBoundedBatch(activeJob);
+      } else {
+        console.log("Heartbeat booster is disabled. Allowing only original heartbeat.");
+      }
+    });
     
   }
 });
@@ -30,7 +36,7 @@ function startBoundedBatch(job) {
   activeTimeouts = [];
 
   // Define 4 staggered heartbeats (0s, 15s, 30s, 45s)
-  const delays = [0, 15000, 30000, 45000];
+  const delays = [15000, 30000, 45000];
 
   delays.forEach((delay, index) => {
     const timeoutId = setTimeout(() => {
@@ -44,7 +50,13 @@ function startBoundedBatch(job) {
 
 async function fireFetch() {
   // Read the URL and headers directly from storage
-  chrome.storage.local.get(['perusallUrl', 'perusallHeaders'], async (data) => {
+  chrome.storage.local.get(['perusallUrl', 'perusallHeaders', 'heartbeatEnabled'], async (data) => {
+
+    if (data.heartbeatEnabled === false) {
+      console.log("Heartbeat booster is disabled. Skipping automated heartbeat.");
+      return;
+    }
+
     if (!data.perusallUrl) {
       console.error("❌ [Booster] No URL found in storage.");
       return;
@@ -81,16 +93,46 @@ function createBadge() {
   badge.style.position = 'fixed';
   badge.style.bottom = '10px';
   badge.style.right = '10px';
-  badge.style.backgroundColor = '#16a34a';
-  badge.style.color = 'white';
   badge.style.padding = '6px 12px';
   badge.style.borderRadius = '20px';
   badge.style.fontSize = '12px';
   badge.style.zIndex = '999999';
   badge.style.pointerEvents = 'none';
-  badge.textContent = `⚡ Perusall Multiplier Active (Headers Cloned)`;
+  badge.style.fontFamily = 'sans-serif';
+
   document.body.appendChild(badge);
+  updateBadgeState();
 }
+
+function updateBadgeState() {
+  const badge = document.getElementById('perusall-booster-badge');
+  if (!badge) return;
+
+  chrome.storage.local.get(['heartbeatEnabled'], (data) => {
+    const isEnabled = data.heartbeatEnabled !== false;
+    if (isEnabled) {
+      badge.style.backgroundColor = '#16a34a';
+      badge.style.color = 'white';
+      badge.textContent = '⚡Perusall Booster Active';
+    } else {
+      badge.style.backgroundColor = '#64748b';
+      badge.style.color = 'white';
+      badge.textContent = 'Perusall Booster Disabled';
+    }
+  });
+}
+
+// Listen for settings changes to update badge and active timeouts in real-time
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.heartbeatEnabled) {
+    updateBadgeState();
+    if (changes.heartbeatEnabled.newValue === false) {
+      // Clear any pending automated timeouts when toggled off
+      activeTimeouts.forEach(t => clearTimeout(t));
+      activeTimeouts = [];
+    }
+  }
+});
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', createBadge);
