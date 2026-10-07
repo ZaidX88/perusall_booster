@@ -6,6 +6,30 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
       return;
     }
 
+    // Intercept assignment document URLs to extract assignmentName and assignmentId
+    if (details.url.includes("/documents/") && details.url.includes("assignmentId=")) {
+      try {
+        const parsedUrl = new URL(details.url);
+        const pathParts = parsedUrl.pathname.split('/');
+        const docIndex = pathParts.indexOf('documents');
+
+        if (docIndex !== -1 && docIndex + 1 < pathParts.length) {
+          const assignmentName = pathParts[docIndex + 1];
+          const assignmentId = parsedUrl.searchParams.get('assignmentId');
+
+          if (assignmentName && assignmentId) {
+            chrome.storage.local.set({
+              assignmentName: assignmentName,
+              assignmentId: assignmentId
+            });
+            console.log("Captured assignment details:", assignmentName, assignmentId);
+          }
+        }
+      } catch (err) {
+        console.error("Error parsing assignment URL:", err);
+      }
+    }
+
     if (details.url.includes("active_time") || details.url.includes("active-time")) {
       const headersMap = {};
 

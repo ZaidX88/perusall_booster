@@ -4,35 +4,37 @@
   <meta charset="utf-8">
   <style>
     body {
-      width: 260px;
+      width: 290px;
       padding: 16px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: #1f2937;
+      color: #0f172a;
       margin: 0;
-      background-color: #ffffff;
+      background-color: #f8fafc;
     }
-    .header {
-      margin-bottom: 16px;
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 8px;
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      margin-bottom: 12px;
     }
-    .header h3 {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 600;
-      color: #111827;
-    }
-    .toggle-row {
+
+    .header-card {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      border-left: 4px solid #2563eb;
     }
-    .toggle-label {
+
+    .title {
       font-size: 14px;
-      font-weight: 500;
-      color: #374151;
+      font-weight: 600;
+      color: #1e293b;
     }
+
+    /* Original Toggle Style - Kept Intact */
     .toggle {
       position: relative;
       display: inline-block;
@@ -69,26 +71,59 @@
     input:checked + .slider:before {
       transform: translateX(20px);
     }
+
+    /* Assignment Display */
+    .assignment-card {
+      background: #ffffff;
+      border-top: 2px solid #2563eb;
+    }
+
+    .assignment-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #2563eb;
+      margin-bottom: 6px;
+    }
+
+    .assignment-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.35;
+      word-break: break-word;
+      margin-bottom: 6px;
+    }
+
+    .assignment-id {
+      font-size: 11px;
+      color: #64748b;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      word-break: break-all;
+    }
+
     #status {
       font-size: 12px;
       min-height: 16px;
       text-align: center;
-      margin-top: 8px;
       font-weight: 500;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h3>Heartbeat Booster</h3>
-  </div>
-
-  <div class="toggle-row">
-    <span class="toggle-label">Enable Booster</span>
+  <div class="card header-card">
+    <span class="title">Heartbeat Booster</span>
     <label class="toggle">
       <input type="checkbox" id="enableToggle" checked>
       <span class="slider"></span>
     </label>
+  </div>
+
+  <div class="card assignment-card">
+    <div class="assignment-label">Current Assignment</div>
+    <div id="assignmentName" class="assignment-name">Not detected</div>
+    <div id="assignmentId" class="assignment-id">ID: Not detected</div>
   </div>
 
   <div id="status"></div>
