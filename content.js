@@ -1,37 +1,45 @@
-let heartbeatTimer = null;
+let currentTimeout = null;
 let activeJob = null;
+
+let activeTimeouts = [];
 
 console.log("Perusall booster content script active.");
 
 // Listen for captured data from background.js
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "TRIGGER_HEARTBEAT_WITH_HEADERS") {
-    if (!activeJob || activeJob.url !== message.url) {
-      activeJob = {
-        url: message.url,
-        csrf: message.csrf,
-        client_id: message.client_id,
-      };
-      console.log("Received new active job configuration with headers, starting 15s loop.");
-      startLoop(activeJob);
-    }
+    
+    console.log("Received new trigger, starting a bounded batch of 4 heartbeats.");
+    startBoundedBatch(activeJob);
+    
   }
 });
 
-function startLoop(job) {
-  if (heartbeatTimer) {
-    clearInterval(heartbeatTimer);
-  }
+function startBoundedBatch(job) {
+  // Clear any existing scheduled batch sequence so they don't overlap chaotically
+  // if (currentTimeout) {
+  //   clearTimeout(currentTimeout);
+  //   currentTimeout = null;
+  // }
 
-  // Fire immediately once
-  fireFetch(job);
+  // Fire the first one immediately
+  //fireFetch(job);
 
-  // Repeat every 15 seconds (4 times per minute)
-  heartbeatTimer = setInterval(() => {
-    if (activeJob) {
-      fireFetch();
-    }
-  }, 15000);
+  // Schedule the remaining 3 heartbeats spaced 15 seconds apart
+  activeTimeouts.forEach(t => clearTimeout(t));
+  activeTimeouts = [];
+
+  // Define 4 staggered heartbeats (0s, 15s, 30s, 45s)
+  const delays = [0, 15000, 30000, 45000];
+
+  delays.forEach((delay, index) => {
+    const timeoutId = setTimeout(() => {
+      fireFetch(index + 1);
+    }, delay);
+    activeTimeouts.push(timeoutId);
+  });
+
+  
 }
 
 async function fireFetch() {
@@ -43,13 +51,16 @@ async function fireFetch() {
     }
 
     const requestHeaders = {
-      ...(data.perusallHeaders || {})
-    };
+  ...(data.perusallHeaders || {})
+};
 
     console.log("Dispatching fetch with storage headers:", requestHeaders);
 
+    const separator = data.perusallUrl.includes('?') ? '&' : '?';
+    const taggedUrl = `${data.perusallUrl}${separator}_booster=true`;
+
     try {
-      const response = await fetch(data.perusallUrl, {
+      const response = await fetch(taggedUrl, {
         method: "POST",
         headers: requestHeaders,
         credentials: "include" // Automatically attaches session cookies

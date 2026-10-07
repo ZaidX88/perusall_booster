@@ -1,9 +1,17 @@
 chrome.webRequest.onBeforeSendHeaders.addListener(
   (details) => {
+    
+    if (details.url.includes("_booster=true")) {
+      console.log("_booster present");
+      return;
+    }
+
     if (details.url.includes("active_time") || details.url.includes("active-time")) {
       const headersMap = {};
+
       
       if (details.requestHeaders) {
+        console.log(details.requestHeaders)
         for (const header of details.requestHeaders) {
           const lowerName = header.name.toLowerCase();
           // Store them with their exact intended casing
@@ -13,16 +21,18 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
           if (lowerName === 'x-perusall-client-user-id') {
             headersMap['X-Perusall-Client-User-Id'] = header.value;
           }
+          
+
         }
       }
 
-      console.log("Captured URL & Normalized Headers:", details.url, headersMap);
+      //console.log("Captured URL & Normalized Headers:", details.url, headersMap);
 
       chrome.storage.local.set({
         perusallUrl: details.url,
         perusallHeaders: headersMap
       }, () => {
-        console.log("Saved URL & Headers to storage:", details.url, headersMap);
+        //console.log("Saved URL & Headers to storage:", details.url, headersMap);
       });
 
       if (details.tabId !== -1) {
@@ -30,6 +40,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
           type: "TRIGGER_HEARTBEAT_WITH_HEADERS",
           url: details.url,
         }).catch(() => {});
+        console.log("TRIGGER_HEARTBEAT_WITH_HEADERS sent")
       }
     }
   },
