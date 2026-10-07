@@ -5,14 +5,23 @@ let activeTimeouts = [];
 
 console.log("Perusall booster content script active.");
 
+const BOOSTER_DELAYS = {
+  "2x": [30000],
+  "3x": [20000, 40000],
+  "4x": [15000, 30000, 45000],
+  "5x": [12000, 24000, 36000, 48000],
+  "8x": [7500, 15000, 22500, 30000, 37500, 45000, 52500]
+};
+
 // Listen for captured data from background.js
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "TRIGGER_HEARTBEAT_WITH_HEADERS") {
     
-    chrome.storage.local.get(['heartbeatEnabled'], (data) => {
+    chrome.storage.local.get(['heartbeatEnabled', 'boosterMultiplier'], (data) => {
       if (data.heartbeatEnabled !== false) {
-        console.log("Received new trigger, starting a bounded batch of 4 heartbeats.");
-        startBoundedBatch(activeJob);
+        const multiplier = data.boosterMultiplier || "4x";
+        
+        startBoundedBatch(multiplier);
       } else {
         console.log("Heartbeat booster is disabled. Allowing only original heartbeat.");
       }
@@ -23,22 +32,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-function startBoundedBatch(job) {
-  // Clear any existing scheduled batch sequence so they don't overlap chaotically
-  // if (currentTimeout) {
-  //   clearTimeout(currentTimeout);
-  //   currentTimeout = null;
-  // }
-
-  // Fire the first one immediately
-  //fireFetch(job);
+function startBoundedBatch(multiplier) {
 
   // Schedule the remaining 3 heartbeats spaced 15 seconds apart
   activeTimeouts.forEach(t => clearTimeout(t));
   activeTimeouts = [];
+ 
+  const delays = BOOSTER_DELAYS[multiplier] || BOOSTER_DELAYS["4x"];
 
-  // Define 4 staggered heartbeats (0s, 15s, 30s, 45s)
-  const delays = [15000, 30000, 45000];
+  console.log("Received new trigger, starting a bounded batch heartbeats.");
+  console.log(delays);
 
   delays.forEach((delay, index) => {
     const timeoutId = setTimeout(() => {
