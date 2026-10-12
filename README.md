@@ -1,6 +1,6 @@
 # Perusall Heartbeat Booster
 
-Perusall Heartbeat Booster is a Google Chrome extension designed to monitor active reading progress, display real-time assignment metrics, and manage automated heartbeat booster requests for Perusall assignments.
+Perusall Heartbeat Booster is a browser extension for Google Chrome and Microsoft Edge designed to monitor active reading progress, display real-time assignment metrics, and manage automated heartbeat booster requests for Perusall assignments.
 
 ---
 
@@ -24,9 +24,11 @@ Perusall Heartbeat Booster is a Google Chrome extension designed to monitor acti
 
 1. Go to the **Releases** page of this repository and download the latest `.zip` release asset (e.g., `perusall-booster-v1.0.0.zip`).
 2. Extract the downloaded `.zip` file into a folder on your computer.
-3. Open Google Chrome and navigate to `chrome://extensions/`.
-4. Enable **Developer mode** using the toggle switch in the top-right corner.
-5. Click **Load unpacked** in the top-left corner.
+3. Open your browser's extensions page:
+   - **Google Chrome**: Navigate to `chrome://extensions/`
+   - **Microsoft Edge**: Navigate to `edge://extensions/`
+4. Enable **Developer mode** using the toggle switch (top-right in Chrome, left sidebar in Edge).
+5. Click **Load unpacked** (top-left in Chrome, top toolbar in Edge).
 6. Select the extracted folder containing `manifest.json`.
 
 ---
@@ -36,10 +38,12 @@ Perusall Heartbeat Booster is a Google Chrome extension designed to monitor acti
 1. Clone or download this repository locally:
    ```bash
    git clone https://github.com/ZaidX88/perusall_booster.git
-3. Open Google Chrome and navigate to `chrome://extensions/`.
-4. Enable **Developer mode** using the toggle switch in the top-right corner.
-5. Click **Load unpacked** in the top-left corner.
-6. Select the extracted folder containing `manifest.json`.
+2. Open your browser's extensions page:
+   - **Google Chrome**: Navigate to `chrome://extensions/`
+   - **Microsoft Edge**: Navigate to `edge://extensions/`
+3. Enable **Developer mode** using the toggle switch (top-right in Chrome, left sidebar in Edge).
+4. Click **Load unpacked**.
+5. Select the cloned repository folder containing `manifest.json`.
 
 ## How to Use
 
