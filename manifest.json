@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Dynamic Query Modifier",
-  "version": "2.0",
+  "name": "Perusall Heartbeat Booster",
+  "version": "1.0.0",
   "permissions": [
     "declarativeNetRequest",
     "storage",
